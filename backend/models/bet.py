@@ -15,3 +15,4 @@ class Bet(BaseModel):
     loggedAt: datetime = Field(default_factory=datetime.utcnow)
     kellySize: Optional[float] = None
     expectedValue: Optional[float] = None
+    calculation_breakdown: Optional[dict] = None

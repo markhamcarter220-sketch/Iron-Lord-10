@@ -1,5 +1,10 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
+
+class CalculationBreakdown(BaseModel):
+    clv: Optional[dict] = None
+    expected_value: Optional[dict] = None
+    kelly: Optional[dict] = None
 
 class LoggedBetResponse(BaseModel):
     status: str
