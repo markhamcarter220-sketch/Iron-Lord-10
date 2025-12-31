@@ -56,6 +56,22 @@ class EVRequest(BaseModel):
         description="Source of odds data",
         example="the-odds-api-v4"
     )
+    # Optional transparency fields
+    event_description: Optional[str] = Field(
+        None,
+        description="Event description (e.g., 'Chiefs vs Bills')",
+        example="Kansas City Chiefs vs Buffalo Bills"
+    )
+    outcome_name: Optional[str] = Field(
+        None,
+        description="Name of the outcome being bet on",
+        example="Kansas City Chiefs"
+    )
+    bookmaker_name: Optional[str] = Field(
+        None,
+        description="Name of the sportsbook",
+        example="DraftKings"
+    )
 
 
 @router.post("/calculate", status_code=status.HTTP_200_OK)
@@ -90,6 +106,16 @@ def calculate_ev(request: EVRequest):
                 }
             )
 
+        # Build odds source detail for transparency
+        odds_source_detail = None
+        if request.event_description or request.outcome_name or request.bookmaker_name:
+            odds_source_detail = {
+                "event": request.event_description,
+                "outcome": request.outcome_name,
+                "bookmaker": request.bookmaker_name,
+                "api_source": request.odds_source
+            }
+
         # Calculate EV
         result = calculate_straight_bet_ev(
             odds=Decimal(str(request.odds)),
@@ -97,7 +123,8 @@ def calculate_ev(request: EVRequest):
             cash_stake=Decimal(str(request.cash_stake)),
             odds_timestamp=odds_ts,
             odds_source=request.odds_source,
-            max_odds_age_seconds=60
+            max_odds_age_seconds=60,
+            odds_source_detail=odds_source_detail
         )
 
         return result

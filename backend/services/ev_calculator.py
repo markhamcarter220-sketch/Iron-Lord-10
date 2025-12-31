@@ -108,6 +108,10 @@ class EVResult(BaseModel):
         ...,
         description="All inputs used in calculation (for transparency)"
     )
+    odds_source_detail: Optional[dict] = Field(
+        default=None,
+        description="Detailed information about odds source (sportsbook, event, filtering)"
+    )
     calculation_timestamp: datetime = Field(
         ...,
         description="When this calculation was performed"
@@ -152,7 +156,8 @@ def calculate_straight_bet_ev(
     cash_stake: Decimal,
     odds_timestamp: datetime,
     odds_source: str,
-    max_odds_age_seconds: int = 60
+    max_odds_age_seconds: int = 60,
+    odds_source_detail: Optional[dict] = None
 ) -> EVResult:
     """
     Calculate Expected Value for a straight cash bet.
@@ -232,6 +237,7 @@ def calculate_straight_bet_ev(
             "true_probability": float(true_probability),
             "cash_stake": float(cash_stake)
         },
+        odds_source_detail=odds_source_detail,
         calculation_timestamp=calculation_time,
         odds_timestamp=odds_timestamp,
         odds_age_seconds=int(odds_age),

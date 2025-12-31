@@ -89,7 +89,11 @@ export default function EVCalculator() {
         true_probability: parseFloat(probability) / 100, // Convert percentage to decimal
         cash_stake: parseFloat(stake),
         odds_timestamp: oddsTimestamp,
-        odds_source: 'the-odds-api-v4'
+        odds_source: 'the-odds-api-v4',
+        // Transparency fields
+        event_description: odds.event,
+        outcome_name: odds.outcome,
+        bookmaker_name: odds.bookmaker
       });
 
       setEvResult(response.data);
@@ -363,6 +367,24 @@ export default function EVCalculator() {
             <strong>Formula:</strong> {evResult.formula_used}
           </div>
 
+          {/* Sportsbook Transparency */}
+          {evResult.odds_source_detail && (
+            <details open style={{ fontSize: 13, marginBottom: 16, background: 'white', padding: 12, borderRadius: 6 }}>
+              <summary style={{ cursor: 'pointer', fontWeight: 600, marginBottom: 8 }}>
+                🔍 Sportsbook Transparency
+              </summary>
+              <div style={{ marginTop: 12, paddingLeft: 16, lineHeight: '1.8' }}>
+                <div><strong>Event:</strong> {evResult.odds_source_detail.event}</div>
+                <div><strong>Betting On:</strong> {evResult.odds_source_detail.outcome}</div>
+                <div><strong>Sportsbook Used:</strong> {evResult.odds_source_detail.bookmaker}</div>
+                <div><strong>Odds Price:</strong> {evResult.inputs.odds} (decimal)</div>
+                <div style={{ marginTop: 8, fontSize: 12, color: '#666', fontStyle: 'italic' }}>
+                  ℹ️ MVP Limitation: Only {evResult.odds_source_detail.bookmaker} is checked. Future versions will compare multiple sportsbooks.
+                </div>
+              </div>
+            </details>
+          )}
+
           <details style={{ fontSize: 13, marginBottom: 16 }}>
             <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
               📊 Calculation Details
@@ -373,7 +395,7 @@ export default function EVCalculator() {
               <div><strong>Your Stake:</strong> ${evResult.inputs.cash_stake.toFixed(2)}</div>
               <div><strong>Odds From:</strong> {new Date(evResult.odds_timestamp).toLocaleString()} ({evResult.odds_age_seconds}s ago)</div>
               <div><strong>Calculated:</strong> {new Date(evResult.calculation_timestamp).toLocaleString()}</div>
-              <div><strong>Source:</strong> {evResult.odds_source}</div>
+              <div><strong>API Source:</strong> {evResult.odds_source}</div>
             </div>
           </details>
 
