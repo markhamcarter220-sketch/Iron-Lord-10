@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ironlord-backend
+    name: better-bets-backend
     env: python
     region: oregon
     rootDir: backend
@@ -11,10 +11,15 @@ services:
     envVars:
       - key: ODDS_API_KEY
         sync: false
+        # Get from: https://the-odds-api.com
       - key: MONGO_URI
         sync: false
+        # Optional: Only if using bet logging
+        # Example: mongodb+srv://user:pass@cluster.mongodb.net/db
       - key: CORS_ORIGIN
-        value: https://your-app.vercel.app
+        sync: false
+        # CRITICAL: Set to your Vercel frontend URL (not "*")
+        # Example: https://better-bets.vercel.app
       - key: LOG_LEVEL
         value: info
       - key: PORT

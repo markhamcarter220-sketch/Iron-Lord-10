@@ -14,7 +14,7 @@ Where:
   - stake = Cash wagered (stake > 0)
 """
 
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel, Field, validator
@@ -225,7 +225,7 @@ def calculate_straight_bet_ev(
 
     # Build result with full provenance
     return EVResult(
-        ev_cash=ev.quantize(Decimal('0.01')),  # Round to cents
+        ev_cash=ev.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),  # Round to cents
         formula_used="EV = stake × (P × O - 1)",
         inputs={
             "odds": float(odds),
