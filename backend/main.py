@@ -8,7 +8,16 @@ from routes import clv, odds_best, health, bets, odds
 
 app = FastAPI()
 
-app.add_middleware(CORSMiddleware, allow_origins=[settings.CORS_ORIGIN], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+# Parse comma-separated origins
+allowed_origins = [origin.strip() for origin in settings.CORS_ORIGIN.split(",")]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type", "Authorization"]
+)
 app.middleware("http")(log_requests)
 
 app.include_router(health.router)

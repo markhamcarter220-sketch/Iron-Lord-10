@@ -1,28 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import CalculationBreakdown from './CalculationBreakdown';
 
 export default function BetHistory() {
   const [bets, setBets] = useState([]);
   const [username, setUsername] = useState('testuser');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const fetchBets = async () => {
+  const fetchBets = useCallback(async () => {
     if (!username) return;
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`/api/bets/history/${username}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setBets(data.bets || []);
     } catch (error) {
       console.error('Error fetching bets:', error);
+      setError(error.message || 'Failed to fetch bets');
     } finally {
       setLoading(false);
     }
-  };
+  }, [username]);
 
   useEffect(() => {
     fetchBets();
-  }, []);
+  }, [fetchBets]);
 
   const containerStyle = {
     margin: '16px 0',
@@ -108,6 +114,15 @@ export default function BetHistory() {
     return '#4cc9f0';
   };
 
+  const errorStyle = {
+    background: '#2d0a0f',
+    border: '1px solid #ff006e',
+    borderRadius: 4,
+    padding: 12,
+    color: '#ff006e',
+    marginBottom: 16
+  };
+
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
@@ -126,11 +141,17 @@ export default function BetHistory() {
         </div>
       </div>
 
-      {bets.length === 0 ? (
+      {error && (
+        <div style={errorStyle}>
+          Error: {error}
+        </div>
+      )}
+
+      {bets.length === 0 && !error ? (
         <div style={{ color: '#888', fontStyle: 'italic', textAlign: 'center', padding: 20 }}>
           {loading ? 'Loading bets...' : 'No bets found. Start logging your picks!'}
         </div>
-      ) : (
+      ) : !error ? (
         <div>
           {bets.map((bet, idx) => (
             <div key={bet.id || idx} style={betCardStyle}>
@@ -181,7 +202,7 @@ export default function BetHistory() {
             </div>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
