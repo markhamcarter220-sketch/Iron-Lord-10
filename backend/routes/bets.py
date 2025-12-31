@@ -1,19 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from models.bet import Bet
 from services.bet_service import log_bet, fetch_bets
 from models.responses import LoggedBetResponse, BetHistoryResponse
-import re
+from utils.validation import validate_username
 
 router = APIRouter(prefix="/api/bets", tags=["bets"])
-
-def validate_username(username: str) -> str:
-    """Validate username format to prevent injection attacks."""
-    if not re.match(r'^[a-zA-Z0-9_-]{3,20}$', username):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid username format. Must be 3-20 alphanumeric characters, underscores, or hyphens."
-        )
-    return username
 
 @router.post("/log", response_model=LoggedBetResponse)
 def log_bet_route(bet: Bet):
