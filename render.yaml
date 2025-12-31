@@ -1,0 +1,30 @@
+services:
+  # FastAPI Backend
+  - type: web
+    name: ironlord-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: MONGO_URI
+        sync: false
+      - key: ODDS_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: LOG_LEVEL
+        value: info
+
+  # MongoDB (if using Render's MongoDB instead of external)
+  # Uncomment if you want MongoDB on Render
+  # - type: pserv
+  #   name: ironlord-mongodb
+  #   env: docker
+  #   plan: free
+  #   region: oregon
+  #   dockerfilePath: ./Dockerfile.mongo

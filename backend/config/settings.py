@@ -4,7 +4,7 @@ class Settings(BaseSettings):
     ODDS_API_KEY: str
     MONGO_URI: str = "mongodb://localhost:27017"
     PORT: int = 8000
-    CORS_ORIGIN: str = "*"
+    CORS_ORIGIN: str = "http://localhost:5173,http://localhost:3000"
     LOG_LEVEL: str = "info"
 
     class Config:
