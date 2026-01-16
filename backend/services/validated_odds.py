@@ -75,20 +75,20 @@ class ValidatedOddsResponse(BaseModel):
     source: str = Field(default="the-odds-api-v4")
 
 
-# Supported sportsbooks
+# Supported sportsbooks (using The Odds API actual keys)
 SUPPORTED_SPORTSBOOKS = {
     "draftkings": "DraftKings",
     "fanduel": "FanDuel",
     "betmgm": "BetMGM",
-    "caesars": "Caesars",
-    "espnbet": "ESPN BET",
+    "williamhill_us": "William Hill",
     "bovada": "Bovada",
-    "pointsbet": "PointsBet",
+    "pointsbetus": "PointsBet",
     "betrivers": "BetRivers",
     "wynnbet": "WynnBET",
-    "unibet_us": "Unibet",
-    "barstool": "Barstool Sportsbook",
-    "williamhill_us": "William Hill",
+    "unibet": "Unibet",
+    "betus": "BetUS",
+    "mybookieag": "MyBookie.ag",
+    "betonlineag": "BetOnline.ag",
 }
 
 
