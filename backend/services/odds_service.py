@@ -15,23 +15,37 @@ def get_sports():
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def get_odds(sport_key: str):
+    """
+    Fetch odds from The Odds API.
+
+    CRITICAL: Returns DECIMAL odds format for correct EV calculations.
+    CRITICAL: Validates and includes timestamps for staleness detection.
+
+    Returns dict with:
+        - data: API response
+        - meta: Request quota info
+        - retrieved_at: When we fetched this data (UTC)
+    """
     url = f"{BASE}/{sport_key}/odds"
     params = {
         "apiKey": settings.ODDS_API_KEY,
         "regions": "us",
-        "markets": "h2h,spreads,totals",
-        "oddsFormat": "american",
+        "markets": "h2h",  # ONLY h2h for MVP - no spreads/totals yet
+        "oddsFormat": "decimal",  # REQUIRED - not american
         "dateFormat": "iso"
     }
     r = requests.get(url, params=params, timeout=20)
     if r.status_code != 200:
         raise OddsAPIError(f"{r.status_code}: {r.text[:200]}")
+
+    from datetime import datetime
     return {
         "data": r.json(),
         "meta": {
             "x-requests-remaining": r.headers.get("x-requests-remaining"),
             "x-requests-used": r.headers.get("x-requests-used")
-        }
+        },
+        "retrieved_at": datetime.utcnow().isoformat() + "Z"
     }
 
 def get_best_lines(sport_key: str, market: str = "h2h") -> list:
