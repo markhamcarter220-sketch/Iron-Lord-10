@@ -2,8 +2,6 @@
 Validated Odds Endpoint
 
 Returns only validated, current odds from supported sportsbooks.
-
-MVP LIMITATION: Only DraftKings supported initially.
 """
 
 from fastapi import APIRouter, HTTPException, status, Query
@@ -13,6 +11,7 @@ from services.validated_odds import (
     OddsValidationError,
     SUPPORTED_SPORTSBOOKS
 )
+from config.sports import SUPPORTED_SPORTS, get_sports_by_category
 
 router = APIRouter(prefix="/api/odds", tags=["odds"])
 
@@ -82,25 +81,14 @@ def get_odds_for_sport(sport_key: str):
 @router.get("/sports/available")
 def get_available_sports():
     """
-    Get list of available sports from The Odds API.
+    Get list of supported sports with categories.
 
-    Note: Not all sports may have supported sportsbooks.
+    Returns sports grouped by category (NFL, NBA, Soccer, etc.)
     """
-    from services.odds_service import get_sports
-
-    try:
-        sports = get_sports()
-        return {
-            "sports": sports,
-            "supported_sportsbooks": list(SUPPORTED_SPORTSBOOKS.keys()),
-            "note": "Only events from supported sportsbooks will be returned"
-        }
-
-    except OddsAPIError as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={
-                "error": "Odds API unavailable",
-                "message": str(e)
-            }
-        )
+    return {
+        "sports": SUPPORTED_SPORTS,
+        "by_category": get_sports_by_category(),
+        "supported_sportsbooks": list(SUPPORTED_SPORTSBOOKS.values()),
+        "total_sports": len(SUPPORTED_SPORTS),
+        "total_sportsbooks": len(SUPPORTED_SPORTSBOOKS)
+    }

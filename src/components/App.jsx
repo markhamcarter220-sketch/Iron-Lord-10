@@ -1,18 +1,24 @@
 import React from 'react';
-import EVCalculator from './EVCalculator';
+import BettingDashboard from './BettingDashboard';
 
 /**
- * Better Bets - MVP v0.1.0
+ * Better Bets - Professional Edition v2.0.0
  *
- * Mathematically correct EV calculator.
- * Only supports: Straight cash bets, DraftKings, H2H markets
+ * Mathematically correct EV calculator with multiple sportsbooks and sports.
+ *
+ * Features:
+ * - 12+ major sportsbooks (DraftKings, FanDuel, BetMGM, Caesars, etc.)
+ * - 15+ sports (NFL, NBA, NHL, MLB, Soccer, UFC, etc.)
+ * - Professional navy/silver UI
+ * - Real-time odds comparison
+ * - Full transparency and provenance
  *
  * Framework compliant:
  * - User provides probability (no guessing)
  * - Timestamps validated (< 60s)
  * - Full provenance displayed
- * - Unsafe features removed
+ * - Mathematically correct EV formula
  */
 export default function App() {
-  return <EVCalculator />;
+  return <BettingDashboard />;
 }

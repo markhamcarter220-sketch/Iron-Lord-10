@@ -75,10 +75,20 @@ class ValidatedOddsResponse(BaseModel):
     source: str = Field(default="the-odds-api-v4")
 
 
-# Supported sportsbooks for MVP
+# Supported sportsbooks
 SUPPORTED_SPORTSBOOKS = {
     "draftkings": "DraftKings",
-    # Add more only after verifying bonus structures
+    "fanduel": "FanDuel",
+    "betmgm": "BetMGM",
+    "caesars": "Caesars",
+    "espnbet": "ESPN BET",
+    "bovada": "Bovada",
+    "pointsbet": "PointsBet",
+    "betrivers": "BetRivers",
+    "wynnbet": "WynnBET",
+    "unibet_us": "Unibet",
+    "barstool": "Barstool Sportsbook",
+    "williamhill_us": "William Hill",
 }
 
 
