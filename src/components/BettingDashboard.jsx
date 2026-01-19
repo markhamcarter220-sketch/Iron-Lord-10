@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// Professional color scheme
+// Professional color scheme matching logo
 const colors = {
   navy: '#0A1929',
   navyLight: '#132F4C',
@@ -19,6 +19,16 @@ const colors = {
   border: '#1E3A5F'
 };
 
+// Convert decimal odds to American odds
+const decimalToAmerican = (decimal) => {
+  const dec = parseFloat(decimal);
+  if (dec >= 2.0) {
+    return `+${Math.round((dec - 1) * 100)}`;
+  } else {
+    return `${Math.round(-100 / (dec - 1))}`;
+  }
+};
+
 export default function BettingDashboard() {
   const [sports, setSports] = useState([]);
   const [selectedSport, setSelectedSport] = useState('basketball_nba');
@@ -27,6 +37,7 @@ export default function BettingDashboard() {
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedOdds, setSelectedOdds] = useState(null);
+  const [oddsFormat, setOddsFormat] = useState('decimal'); // 'decimal' or 'american'
 
   // EV Calculation state
   const [probability, setProbability] = useState('');
@@ -111,73 +122,139 @@ export default function BettingDashboard() {
     setEvResult(null);
   };
 
+  const formatOdds = (decimal) => {
+    return oddsFormat === 'american' ? decimalToAmerican(decimal) : parseFloat(decimal).toFixed(2);
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
       background: `linear-gradient(135deg, ${colors.navy} 0%, ${colors.navyLight} 100%)`,
       color: colors.silver,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      padding: '20px'
+      padding: '12px'
     }}>
-      {/* Header */}
-      <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto 30px',
-        borderBottom: `2px solid ${colors.accent}`,
-        paddingBottom: '20px'
-      }}>
-        <h1 style={{
-          margin: 0,
-          fontSize: '36px',
-          fontWeight: '700',
-          background: `linear-gradient(to right, ${colors.white}, ${colors.accent})`,
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          letterSpacing: '-1px'
-        }}>
-          Better Bets
-        </h1>
-        <p style={{ margin: '8px 0 0', color: colors.silverDark, fontSize: '14px' }}>
-          Professional EV Calculator • Multiple Sportsbooks • Real-Time Odds
-        </p>
-      </div>
-
-      {/* Sport Selector */}
+      {/* Logo & Header */}
       <div style={{
         maxWidth: '1400px',
         margin: '0 auto 20px',
+        borderBottom: `2px solid ${colors.accent}`,
+        paddingBottom: '16px',
+        textAlign: 'center'
+      }}>
+        {/* Logo */}
+        <div style={{
+          fontSize: '48px',
+          fontWeight: '900',
+          background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.accent} 100%)`,
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          letterSpacing: '-2px',
+          marginBottom: '8px',
+          lineHeight: '1'
+        }}>
+          BETTER<br/>BETS
+        </div>
+
+        {/* Taglines */}
+        <div style={{
+          fontSize: '12px',
+          color: colors.silverDark,
+          marginTop: '8px',
+          letterSpacing: '1px'
+        }}>
+          Where Data Drives Winning
+        </div>
+        <div style={{
+          fontSize: '11px',
+          color: colors.accent,
+          marginTop: '4px',
+          fontWeight: '600'
+        }}>
+          Smarter Bets. Stronger Bets.
+        </div>
+      </div>
+
+      {/* Controls Row - Mobile Responsive */}
+      <div style={{
+        maxWidth: '1400px',
+        margin: '0 auto 16px',
         background: colors.navyLight,
         border: `1px solid ${colors.border}`,
         borderRadius: '12px',
-        padding: '20px'
+        padding: '16px'
       }}>
-        <label style={{ display: 'block', marginBottom: '10px', fontWeight: '600', fontSize: '14px' }}>
-          Select Sport
-        </label>
-        <select
-          value={selectedSport}
-          onChange={(e) => setSelectedSport(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px',
-            fontSize: '16px',
-            background: colors.navy,
-            color: colors.silver,
-            border: `1px solid ${colors.border}`,
-            borderRadius: '8px',
-            cursor: 'pointer'
-          }}
-        >
-          {Object.entries(sports).map(([category, sportsList]) => (
-            <optgroup key={category} label={category}>
-              {sportsList.map((sport) => (
-                <option key={sport.key} value={sport.key}>
-                  {sport.icon} {sport.title}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+        {/* Sport Selector */}
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '13px' }}>
+            Sport
+          </label>
+          <select
+            value={selectedSport}
+            onChange={(e) => setSelectedSport(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px',
+              fontSize: '15px',
+              background: colors.navy,
+              color: colors.silver,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+          >
+            {Object.entries(sports).map(([category, sportsList]) => (
+              <optgroup key={category} label={category}>
+                {sportsList.map((sport) => (
+                  <option key={sport.key} value={sport.key}>
+                    {sport.icon} {sport.title}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+
+        {/* Odds Format Toggle */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '13px' }}>
+            Odds Format
+          </label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => setOddsFormat('decimal')}
+              style={{
+                flex: 1,
+                padding: '10px',
+                background: oddsFormat === 'decimal' ? colors.accent : colors.navy,
+                color: colors.white,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '8px',
+                fontWeight: '600',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              Decimal
+            </button>
+            <button
+              onClick={() => setOddsFormat('american')}
+              style={{
+                flex: 1,
+                padding: '10px',
+                background: oddsFormat === 'american' ? colors.accent : colors.navy,
+                color: colors.white,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '8px',
+                fontWeight: '600',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              American
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Loading / Error States */}
@@ -186,8 +263,9 @@ export default function BettingDashboard() {
           maxWidth: '1400px',
           margin: '0 auto',
           textAlign: 'center',
-          padding: '40px',
-          color: colors.accent
+          padding: '40px 20px',
+          color: colors.accent,
+          fontSize: '14px'
         }}>
           Loading odds...
         </div>
@@ -196,128 +274,145 @@ export default function BettingDashboard() {
       {error && (
         <div style={{
           maxWidth: '1400px',
-          margin: '0 auto',
+          margin: '0 auto 16px',
           background: `${colors.red}22`,
           border: `1px solid ${colors.red}`,
           borderRadius: '8px',
-          padding: '16px',
-          color: colors.silver
+          padding: '12px',
+          color: colors.silver,
+          fontSize: '13px'
         }}>
           {error}
         </div>
       )}
 
-      {/* Events Table */}
+      {/* Events Table - Mobile Optimized */}
       {!loading && events.length > 0 && (
         <div style={{
           maxWidth: '1400px',
-          margin: '0 auto',
-          background: colors.navyLight,
-          border: `1px solid ${colors.border}`,
-          borderRadius: '12px',
-          overflow: 'hidden'
+          margin: '0 auto 16px'
         }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: colors.navy, borderBottom: `1px solid ${colors.border}` }}>
-                <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: colors.silverDark }}>
-                  EVENT
-                </th>
-                <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: colors.silverDark }}>
-                  TIME
-                </th>
-                {events[0]?.bookmakers.map((book) => (
-                  <th key={book.key} style={{ padding: '16px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: colors.silverDark }}>
-                    {book.title}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event) => (
-                <tr key={event.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
-                  <td style={{ padding: '16px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: colors.silver }}>
-                      {event.away_team} @ {event.home_team}
-                    </div>
-                  </td>
-                  <td style={{ padding: '16px', fontSize: '12px', color: colors.silverDark }}>
-                    {new Date(event.commence_time).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit'
-                    })}
-                  </td>
+          {events.map((event) => (
+            <div key={event.id} style={{
+              background: colors.navyLight,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '12px'
+            }}>
+              {/* Event Info */}
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: colors.white,
+                marginBottom: '4px'
+              }}>
+                {event.away_team} @ {event.home_team}
+              </div>
+              <div style={{
+                fontSize: '11px',
+                color: colors.silverDark,
+                marginBottom: '12px'
+              }}>
+                {new Date(event.commence_time).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit'
+                })}
+              </div>
+
+              {/* Bookmakers - Mobile Scroll */}
+              <div style={{
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                marginLeft: '-16px',
+                marginRight: '-16px',
+                paddingLeft: '16px',
+                paddingRight: '16px'
+              }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${event.bookmakers.length}, minmax(120px, 1fr))`,
+                  gap: '8px',
+                  paddingBottom: '4px'
+                }}>
                   {event.bookmakers.map((bookmaker) => (
-                    <td key={bookmaker.key} style={{ padding: '8px' }}>
-                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                    <div key={bookmaker.key} style={{
+                      background: colors.navy,
+                      borderRadius: '8px',
+                      padding: '10px',
+                      minWidth: '120px'
+                    }}>
+                      <div style={{
+                        fontSize: '10px',
+                        color: colors.silverDark,
+                        marginBottom: '6px',
+                        fontWeight: '600',
+                        textAlign: 'center',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {bookmaker.title}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {bookmaker.outcomes.slice(0, 2).map((outcome) => (
                           <button
                             key={outcome.name}
                             onClick={() => selectOdds(event, bookmaker, outcome)}
                             style={{
-                              padding: '8px 12px',
+                              padding: '8px',
                               background: selectedOdds?.outcome === outcome.name && selectedOdds?.bookmaker === bookmaker.title
                                 ? colors.accent
-                                : colors.navy,
+                                : colors.navyLight,
                               color: colors.white,
                               border: `1px solid ${colors.border}`,
                               borderRadius: '6px',
                               cursor: 'pointer',
                               fontSize: '13px',
-                              fontWeight: '600',
-                              transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!(selectedOdds?.outcome === outcome.name && selectedOdds?.bookmaker === bookmaker.title)) {
-                                e.target.style.background = colors.accentDark;
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (!(selectedOdds?.outcome === outcome.name && selectedOdds?.bookmaker === bookmaker.title)) {
-                                e.target.style.background = colors.navy;
-                              }
+                              fontWeight: '700',
+                              textAlign: 'center'
                             }}
                           >
-                            {parseFloat(outcome.price).toFixed(2)}
+                            {formatOdds(outcome.price)}
                           </button>
                         ))}
                       </div>
-                    </td>
+                    </div>
                   ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* EV Calculator Panel */}
+      {/* EV Calculator Panel - Mobile Optimized */}
       {selectedOdds && (
         <div style={{
           maxWidth: '1400px',
-          margin: '20px auto 0',
+          margin: '0 auto',
           background: colors.navyLight,
           border: `2px solid ${colors.accent}`,
           borderRadius: '12px',
-          padding: '24px'
+          padding: '16px'
         }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: '700', color: colors.white }}>
-            Calculate Expected Value
+          <h3 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: '700', color: colors.white }}>
+            Calculate EV
           </h3>
 
-          <div style={{ marginBottom: '16px', padding: '12px', background: colors.navy, borderRadius: '8px' }}>
-            <div style={{ fontSize: '14px', color: colors.silverDark }}>Selected Bet</div>
-            <div style={{ fontSize: '16px', fontWeight: '600', color: colors.white, marginTop: '4px' }}>
-              {selectedOdds.outcome} @ {selectedOdds.price} ({selectedOdds.bookmaker})
+          <div style={{ marginBottom: '12px', padding: '10px', background: colors.navy, borderRadius: '8px' }}>
+            <div style={{ fontSize: '12px', color: colors.silverDark }}>Selected Bet</div>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: colors.white, marginTop: '4px' }}>
+              {selectedOdds.outcome} @ {formatOdds(selectedOdds.price)} ({selectedOdds.bookmaker})
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
-                Your Win Probability (%)
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600' }}>
+                Win Probability (%)
               </label>
               <input
                 type="number"
@@ -329,8 +424,8 @@ export default function BettingDashboard() {
                 step="0.1"
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  fontSize: '16px',
+                  padding: '10px',
+                  fontSize: '14px',
                   background: colors.navy,
                   color: colors.white,
                   border: `1px solid ${colors.border}`,
@@ -341,8 +436,8 @@ export default function BettingDashboard() {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
-                Stake Amount ($)
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '600' }}>
+                Stake ($)
               </label>
               <input
                 type="number"
@@ -353,8 +448,8 @@ export default function BettingDashboard() {
                 step="1"
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  fontSize: '16px',
+                  padding: '10px',
+                  fontSize: '14px',
                   background: colors.navy,
                   color: colors.white,
                   border: `1px solid ${colors.border}`,
@@ -370,15 +465,14 @@ export default function BettingDashboard() {
             disabled={!probability || !stake || calculating}
             style={{
               width: '100%',
-              padding: '16px',
-              fontSize: '16px',
+              padding: '14px',
+              fontSize: '15px',
               fontWeight: '700',
               background: probability && stake && !calculating ? colors.green : colors.silverDark,
               color: colors.white,
               border: 'none',
               borderRadius: '8px',
-              cursor: probability && stake && !calculating ? 'pointer' : 'not-allowed',
-              transition: 'all 0.2s'
+              cursor: probability && stake && !calculating ? 'pointer' : 'not-allowed'
             }}
           >
             {calculating ? 'Calculating...' : 'Calculate EV'}
@@ -387,17 +481,17 @@ export default function BettingDashboard() {
           {/* EV Result */}
           {evResult && (
             <div style={{
-              marginTop: '20px',
-              padding: '20px',
+              marginTop: '16px',
+              padding: '16px',
               background: evResult.ev_cash >= 0 ? `${colors.green}22` : `${colors.red}22`,
               border: `2px solid ${evResult.ev_cash >= 0 ? colors.green : colors.red}`,
               borderRadius: '8px'
             }}>
-              <div style={{ fontSize: '14px', color: colors.silverDark, marginBottom: '8px' }}>
+              <div style={{ fontSize: '12px', color: colors.silverDark, marginBottom: '6px' }}>
                 Expected Value
               </div>
               <div style={{
-                fontSize: '48px',
+                fontSize: '36px',
                 fontWeight: '700',
                 color: evResult.ev_cash >= 0 ? colors.green : colors.red
               }}>
@@ -405,12 +499,11 @@ export default function BettingDashboard() {
               </div>
 
               {evResult.odds_source_detail && (
-                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: `1px solid ${colors.border}` }}>
-                  <div style={{ fontSize: '12px', color: colors.silverDark }}>
+                <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${colors.border}`, fontSize: '11px' }}>
+                  <div style={{ color: colors.silverDark }}>
                     <strong>Event:</strong> {evResult.odds_source_detail.event}<br />
                     <strong>Betting On:</strong> {evResult.odds_source_detail.outcome}<br />
-                    <strong>Sportsbook:</strong> {evResult.odds_source_detail.bookmaker}<br />
-                    <strong>Formula:</strong> {evResult.formula_used}
+                    <strong>Sportsbook:</strong> {evResult.odds_source_detail.bookmaker}
                   </div>
                 </div>
               )}
@@ -422,15 +515,16 @@ export default function BettingDashboard() {
       {/* Footer */}
       <div style={{
         maxWidth: '1400px',
-        margin: '40px auto 0',
-        padding: '20px 0',
+        margin: '32px auto 0',
+        padding: '16px 0',
         borderTop: `1px solid ${colors.border}`,
-        fontSize: '12px',
+        fontSize: '10px',
         color: colors.silverDark,
-        textAlign: 'center'
+        textAlign: 'center',
+        lineHeight: '1.6'
       }}>
-        <p>This tool calculates Expected Value based on YOUR probability estimate. Not betting advice.</p>
-        <p>Gambling involves risk. Only bet what you can afford to lose.</p>
+        <p style={{ margin: '4px 0' }}>Built on The Odds API. Fair odds estimated by devigging the market.</p>
+        <p style={{ margin: '4px 0' }}>This is a tool, not betting advice. Gambling involves risk.</p>
       </div>
     </div>
   );
