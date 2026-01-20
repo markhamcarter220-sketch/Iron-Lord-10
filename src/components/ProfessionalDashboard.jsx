@@ -49,7 +49,7 @@ export default function ProfessionalDashboard() {
   const [activeTab, setActiveTab] = useState('ev'); // 'ev', 'arbitrage', 'bonus'
 
   // Data state
-  const [sports, setSports] = useState([]);
+  const [sports, setSports] = useState({});
   const [selectedSport, setSelectedSport] = useState('basketball_nba');
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
