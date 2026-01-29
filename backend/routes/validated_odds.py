@@ -22,8 +22,8 @@ def get_odds_for_sport(sport_key: str):
     Get validated odds for a sport.
 
     Returns only:
-    - Events with valid timestamps (< 60 seconds old)
-    - Bookmakers in supported list (currently: DraftKings only)
+    - Events with valid timestamps (< 30 minutes old)
+    - Bookmakers in supported list (12 major US sportsbooks)
     - Odds in valid range (> 1.0 decimal)
     - Head-to-head markets only (no spreads/totals in MVP)
 
@@ -47,7 +47,7 @@ def get_odds_for_sport(sport_key: str):
             "api_requests_used": validated.api_requests_used,
             "source": validated.source,
             "supported_sportsbooks": list(SUPPORTED_SPORTSBOOKS.keys()),
-            "max_odds_age_seconds": 60
+            "max_odds_age_seconds": 1800
         }
 
     except OddsAPIError as e:
