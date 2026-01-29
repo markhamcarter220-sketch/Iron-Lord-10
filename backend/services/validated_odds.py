@@ -96,7 +96,7 @@ def validate_odds_response(
     raw_data: list,
     retrieved_at: datetime,
     meta: dict,
-    max_age_seconds: int = 60
+    max_age_seconds: int = 1800
 ) -> ValidatedOddsResponse:
     """
     Validate odds data from The Odds API.
