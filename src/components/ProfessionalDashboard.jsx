@@ -144,9 +144,13 @@ export default function ProfessionalDashboard() {
       const outcome2Best = { price: 0, bookmaker: null };
 
       event.bookmakers.forEach(bookmaker => {
-        if (bookmaker.outcomes.length >= 2) {
-          const out1 = bookmaker.outcomes[0];
-          const out2 = bookmaker.outcomes[1];
+        // Get h2h market (moneyline)
+        const h2hMarket = bookmaker.markets?.find(m => m.key === 'h2h');
+        const outcomes = h2hMarket?.outcomes || [];
+
+        if (outcomes.length >= 2) {
+          const out1 = outcomes[0];
+          const out2 = outcomes[1];
 
           if (parseFloat(out1.price) > outcome1Best.price) {
             outcome1Best.price = parseFloat(out1.price);
@@ -233,18 +237,19 @@ export default function ProfessionalDashboard() {
     });
   };
 
-  const selectOdds = (event, bookmaker, outcome) => {
+  const selectOdds = (event, bookmaker, outcome, market) => {
     setSelectedEvent(event);
     setSelectedOdds({
       price: outcome.price,
       outcome: outcome.name,
       bookmaker: bookmaker.title,
-      timestamp: bookmaker.last_update
+      timestamp: market.last_update,
+      marketKey: market.key
     });
     setEvResult(null);
   };
 
-  const selectBonusOdds = (event, bookmaker, outcome) => {
+  const selectBonusOdds = (event, bookmaker, outcome, market) => {
     setSelectedEvent(event);
     setBonusOdds({
       price: outcome.price,
@@ -526,16 +531,20 @@ export default function ProfessionalDashboard() {
 
                     <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginLeft: '-12px', marginRight: '-12px', paddingLeft: '12px', paddingRight: '12px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${event.bookmakers.length}, minmax(110px, 1fr))`, gap: '6px', paddingBottom: '4px' }}>
-                        {event.bookmakers.map((bookmaker) => (
+                        {event.bookmakers.map((bookmaker) => {
+                          const h2hMarket = bookmaker.markets?.find(m => m.key === 'h2h');
+                          const outcomes = h2hMarket?.outcomes || [];
+
+                          return (
                           <div key={bookmaker.key} style={{ background: colors.navy, borderRadius: '6px', padding: '8px', minWidth: '110px' }}>
                             <div style={{ fontSize: '9px', color: colors.silverDark, marginBottom: '5px', fontWeight: '600', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {bookmaker.title}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                              {bookmaker.outcomes.slice(0, 2).map((outcome) => (
+                              {outcomes.slice(0, 2).map((outcome) => (
                                 <button
                                   key={outcome.name}
-                                  onClick={() => selectOdds(event, bookmaker, outcome)}
+                                  onClick={() => selectOdds(event, bookmaker, outcome, h2hMarket)}
                                   style={{
                                     padding: '6px',
                                     background: selectedOdds?.outcome === outcome.name && selectedOdds?.bookmaker === bookmaker.title
@@ -850,16 +859,20 @@ export default function ProfessionalDashboard() {
 
                     <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${event.bookmakers.length}, minmax(110px, 1fr))`, gap: '6px' }}>
-                        {event.bookmakers.map((bookmaker) => (
+                        {event.bookmakers.map((bookmaker) => {
+                          const h2hMarket = bookmaker.markets?.find(m => m.key === 'h2h');
+                          const outcomes = h2hMarket?.outcomes || [];
+
+                          return (
                           <div key={bookmaker.key} style={{ background: colors.navy, borderRadius: '6px', padding: '8px', minWidth: '110px' }}>
                             <div style={{ fontSize: '9px', color: colors.silverDark, marginBottom: '5px', fontWeight: '600', textAlign: 'center' }}>
                               {bookmaker.title}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                              {bookmaker.outcomes.slice(0, 2).map((outcome) => (
+                              {outcomes.slice(0, 2).map((outcome) => (
                                 <button
                                   key={outcome.name}
-                                  onClick={() => selectBonusOdds(event, bookmaker, outcome)}
+                                  onClick={() => selectBonusOdds(event, bookmaker, outcome, h2hMarket)}
                                   style={{
                                     padding: '6px',
                                     background: bonusOdds?.outcome === outcome.name && bonusOdds?.bookmaker === bookmaker.title
@@ -879,7 +892,8 @@ export default function ProfessionalDashboard() {
                               ))}
                             </div>
                           </div>
-                        ))}
+                        );
+                        })}
                       </div>
                     </div>
                   </div>

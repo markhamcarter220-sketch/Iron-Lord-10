@@ -14,12 +14,17 @@ def get_sports():
     return r.json()
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
-def get_odds(sport_key: str):
+def get_odds(sport_key: str, markets: str = None):
     """
     Fetch odds from The Odds API.
 
     CRITICAL: Returns DECIMAL odds format for correct EV calculations.
     CRITICAL: Validates and includes timestamps for staleness detection.
+
+    Args:
+        sport_key: Sport identifier (e.g., 'americanfootball_nfl')
+        markets: Comma-separated markets to fetch. Defaults to all main markets.
+                 Options: h2h, spreads, totals, player_props, player_points, etc.
 
     Returns dict with:
         - data: API response
@@ -27,10 +32,15 @@ def get_odds(sport_key: str):
         - retrieved_at: When we fetched this data (UTC)
     """
     url = f"{BASE}/{sport_key}/odds"
+
+    # Default: fetch h2h, spreads, totals, and player props for comprehensive coverage
+    if markets is None:
+        markets = "h2h,spreads,totals"
+
     params = {
         "apiKey": settings.ODDS_API_KEY,
         "regions": "us",
-        "markets": "h2h",  # ONLY h2h for MVP - no spreads/totals yet
+        "markets": markets,
         "oddsFormat": "decimal",  # REQUIRED - not american
         "dateFormat": "iso"
     }
@@ -47,6 +57,46 @@ def get_odds(sport_key: str):
         },
         "retrieved_at": datetime.utcnow().isoformat() + "Z"
     }
+
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+def get_player_props(sport_key: str, event_id: str = None):
+    """
+    Fetch player prop odds from The Odds API.
+
+    Player props include: player points, rebounds, assists, touchdowns, etc.
+
+    Args:
+        sport_key: Sport identifier
+        event_id: Optional specific event ID to fetch props for
+
+    Returns dict with same structure as get_odds()
+    """
+    if event_id:
+        url = f"{BASE}/{sport_key}/events/{event_id}/odds"
+    else:
+        url = f"{BASE}/{sport_key}/odds"
+
+    params = {
+        "apiKey": settings.ODDS_API_KEY,
+        "regions": "us",
+        "markets": "player_points,player_rebounds,player_assists,player_pass_tds,player_rush_yds,player_receptions",
+        "oddsFormat": "decimal",
+        "dateFormat": "iso"
+    }
+    r = requests.get(url, params=params, timeout=20)
+    if r.status_code != 200:
+        raise OddsAPIError(f"{r.status_code}: {r.text[:200]}")
+
+    from datetime import datetime
+    return {
+        "data": r.json(),
+        "meta": {
+            "x-requests-remaining": r.headers.get("x-requests-remaining"),
+            "x-requests-used": r.headers.get("x-requests-used")
+        },
+        "retrieved_at": datetime.utcnow().isoformat() + "Z"
+    }
+
 
 def get_best_lines(sport_key: str, market: str = "h2h") -> list:
     data = get_odds(sport_key, markets=market)["data"]

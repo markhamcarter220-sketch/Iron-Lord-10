@@ -25,8 +25,9 @@ class OddsValidationError(Exception):
 
 class Outcome(BaseModel):
     """Single betting outcome with validated odds"""
-    name: str = Field(..., description="Team/outcome name")
+    name: str = Field(..., description="Team/outcome/player name")
     price: Decimal = Field(..., description="Decimal odds", gt=Decimal('1.0'))
+    point: Optional[Decimal] = Field(None, description="Point spread or total line (for spreads/totals)")
 
     @validator('price')
     def validate_price(cls, v):
@@ -35,14 +36,26 @@ class Outcome(BaseModel):
         return v
 
 
-class Bookmaker(BaseModel):
-    """Bookmaker with validated market data"""
-    key: str = Field(..., description="Sportsbook identifier")
-    title: str = Field(..., description="Display name")
+class Market(BaseModel):
+    """Single market with outcomes (h2h, spreads, totals, etc.)"""
+    key: str = Field(..., description="Market type: h2h, spreads, totals, etc.")
     last_update: datetime = Field(..., description="When odds were last updated")
     outcomes: List[Outcome] = Field(..., min_items=2)
 
     @validator('last_update')
+    def validate_timestamp_not_future(cls, v):
+        if v > datetime.utcnow():
+            raise ValueError("Timestamp cannot be in future")
+        return v
+
+
+class Bookmaker(BaseModel):
+    """Bookmaker with validated market data"""
+    key: str = Field(..., description="Sportsbook identifier")
+    title: str = Field(..., description="Display name")
+    markets: List[Market] = Field(..., min_items=1)
+
+    @validator('last_update', check_fields=False)
     def validate_timestamp_not_future(cls, v):
         if v > datetime.utcnow():
             raise ValueError("Timestamp cannot be in future")
@@ -161,11 +174,19 @@ def validate_odds_response(
                 if age > max_age_seconds:
                     continue  # Skip stale odds
 
-                # Validate markets
-                markets = book.get("markets", [])
-                for market in markets:
-                    if market.get("key") != "h2h":
-                        continue  # Only h2h for MVP
+                # Validate markets (now supporting h2h, spreads, totals, player props, etc.)
+                markets_data = book.get("markets", [])
+                validated_markets = []
+
+                for market in markets_data:
+                    market_key = market.get("key")
+                    if not market_key:
+                        continue
+
+                    # Support multiple market types
+                    if market_key not in ["h2h", "spreads", "totals", "player_points", "player_rebounds",
+                                          "player_assists", "player_pass_tds", "player_rush_yds", "player_receptions"]:
+                        continue  # Skip unsupported markets
 
                     outcomes = market.get("outcomes", [])
                     validated_outcomes = []
@@ -173,6 +194,7 @@ def validate_odds_response(
                     for outcome in outcomes:
                         name = outcome.get("name")
                         price = outcome.get("price")
+                        point = outcome.get("point")  # For spreads/totals
 
                         if not name or price is None:
                             continue  # Skip incomplete outcomes
@@ -182,18 +204,32 @@ def validate_odds_response(
                             price_decimal = Decimal(str(price))
                             if price_decimal <= Decimal('1.0'):
                                 continue  # Skip invalid odds
-                            validated_outcomes.append(Outcome(name=name, price=price_decimal))
+
+                            # Build outcome with optional point
+                            outcome_data = {"name": name, "price": price_decimal}
+                            if point is not None:
+                                outcome_data["point"] = Decimal(str(point))
+
+                            validated_outcomes.append(Outcome(**outcome_data))
                         except (ValueError, InvalidOperation):
                             continue  # Skip unparseable prices
 
-                    # Must have at least 2 outcomes
-                    if len(validated_outcomes) >= 2:
-                        validated_bookmakers.append(Bookmaker(
-                            key=book_key,
-                            title=book_title,
+                    # Must have at least 2 outcomes (except for some player props which may have 1)
+                    min_outcomes = 1 if market_key.startswith("player_") else 2
+                    if len(validated_outcomes) >= min_outcomes:
+                        validated_markets.append(Market(
+                            key=market_key,
                             last_update=last_update,
                             outcomes=validated_outcomes
                         ))
+
+                # Only add bookmaker if it has at least one valid market
+                if validated_markets:
+                    validated_bookmakers.append(Bookmaker(
+                        key=book_key,
+                        title=book_title,
+                        markets=validated_markets
+                    ))
 
             # Only include event if it has at least one valid bookmaker
             if validated_bookmakers:
