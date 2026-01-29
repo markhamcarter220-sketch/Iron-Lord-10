@@ -563,7 +563,8 @@ export default function ProfessionalDashboard() {
                               ))}
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
